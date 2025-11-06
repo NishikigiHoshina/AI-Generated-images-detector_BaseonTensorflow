@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const dropArea = document.querySelector('.image-upload');
+            const fileInput = document.getElementById('image_file');
+
+            // 阻止默认的拖拽行为
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // 高亮显示拖拽区域
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight(e) {
+                dropArea.style.backgroundColor = '#f0f0f0';
+            }
+
+            function unhighlight(e) {
+                dropArea.style.backgroundColor = '';
+            }
+
+            // 处理文件拖拽上传
+            dropArea.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                if (files.length > 0) {
+                    fileInput.files = files;
+                }
+            }
+
+            // 处理点击上传
+            dropArea.addEventListener('click', function () {
+                fileInput.click();
+            });
+        });
+    </script>
+</head>
+<body>
+    <a href="{{ url_for('videopredict') }}" class="btn">视频检测</a>
+    <div class="container">
+        <h1>Fake Detector</h1>
+        <form method="post" action="/predicttext">
+            <div class="form-group">
+                <label for="news_text">新闻文本内容</label>
+                <textarea id="news_text" name="news_text" placeholder="请输入新闻文章内容..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">检测真伪</button>
+        </form>
+        <!-- 拖拽文件上传范例代码  需要搭配scripts -->
+        <form method="POST" action="/predictimg" enctype="multipart/form-data">
+            <div class="form-group image-upload">
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">点击或拖拽上传图片</div>
+                <div class="upload-subtext">支持 PNG, JPG, JPEG, GIF 格式</div>
+                <input type="file" id="image_file" name="image_file" accept="image/*">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">检测真伪</button>
+        </form>
+        
+        {% if prediction or image_prediction or error_msg %}
+        <div class="results">
+            {% if error_msg %}
+            <div class="result-card" style="border-left: 4px solid #f39c12;">
+                <p style="color: #e74c3c; font-weight: bold;">错误提示:</p>
+                <p>{{ error_msg }}</p>
+            </div>
+            {% endif %}
+            
+            {% if prediction %}
+            <div class="result-card {% if prediction == 'Fake' %}prediction-fake{% else %}prediction-real{% endif %}">
+                <h2 class="prediction-text">文本检测结果: {{ prediction }}</h2>
+                <div class="news-preview">新闻文本: {{ news_text }}</div>
+            </div>
+            {% endif %}
+            
+            {% if image_prediction %}
+            <div class="result-card {% if image_prediction == 'Fake' %}prediction-fake{% else %}prediction-real{% endif %}">
+                <h2 class="prediction-text">图片检测结果: {{ image_prediction }}</h2>
+                {% if image_path %}
+                <img src="{{ image_path }}" alt="上传的图片" class="image-preview">
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

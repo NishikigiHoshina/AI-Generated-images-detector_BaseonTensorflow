@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Authenticity Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <a href="{{ url_for('index') }}" class="btn">Back 返回</a>
+    <div class="container" style="text-align: center;">
+    <h1>Upload a Video for Detection</h1>
+    <div class="form-group">
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="videoFile" name="video" accept="video/*" required>
+        <button type="submit">Upload and Analyze</button>
+    </form>
+    </div>
+    <div>
+        <video controls>
+            <source src="" type="video/mp4" >
+            您的浏览器不支持 HTML5 video 标签
+        </video>
+    </div>
+    <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append('video', document.getElementById('videoFile').files[0]);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerText = 'Detection Result: ' + data.result;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('result').innerText = 'Error occurred during detection';
+            });
+        });
+    </script>
+</body>
+</html>
